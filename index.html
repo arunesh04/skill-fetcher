@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Skills Analyzer - Groq API Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:hover {
+            border-color: #667eea;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .results.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .career-name {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .skills-content {
+            color: #555;
+            line-height: 1.8;
+            font-size: 1.05em;
+        }
+
+        .skills-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .skills-list li {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .skills-list li:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .skill-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 0.9em;
+        }
+
+        .skill-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .skill-description {
+            color: #666;
+            font-size: 0.95em;
+            margin-left: 42px;
+        }
+
+        .error {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #fee;
+            border: 2px solid #fcc;
+            border-radius: 10px;
+            color: #c33;
+        }
+
+        .error.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Career Skills Analyzer</h1>
+        <p class="subtitle">Discover the top 10 essential skills for any career using AI</p>
+
+        <form id="careerForm">
+            <div class="form-group">
+                <label for="career">Select a Career:</label>
+                <select id="career" name="career" required>
+                    <option value="">-- Choose a Career --</option>
+                    <option value="Software Engineer">Software Engineer</option>
+                    <option value="Data Scientist">Data Scientist</option>
+                    <option value="Product Manager">Product Manager</option>
+                    <option value="UX Designer">UX Designer</option>
+                    <option value="Marketing Manager">Marketing Manager</option>
+                    <option value="Financial Analyst">Financial Analyst</option>
+                    <option value="Project Manager">Project Manager</option>
+                    <option value="DevOps Engineer">DevOps Engineer</option>
+                    <option value="Business Analyst">Business Analyst</option>
+                    <option value="Machine Learning Engineer">Machine Learning Engineer</option>
+                    <option value="Cybersecurity Specialist">Cybersecurity Specialist</option>
+                    <option value="Cloud Architect">Cloud Architect</option>
+                    <option value="Sales Manager">Sales Manager</option>
+                    <option value="HR Manager">HR Manager</option>
+                    <option value="Content Writer">Content Writer</option>
+                </select>
+            </div>
+
+            <button type="submit" id="submitBtn">Get Top 10 Skills</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #666;">Analyzing career skills...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <h2>Top 10 Skills for <span class="career-name" id="careerName"></span></h2>
+            <div class="skills-content" id="skillsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('careerForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+        const careerName = document.getElementById('careerName');
+        const skillsContent = document.getElementById('skillsContent');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const career = document.getElementById('career').value;
+            if (!career) {
+                showError('Please select a career');
+                return;
+            }
+
+            // Hide previous results and errors
+            results.classList.remove('active');
+            error.classList.remove('active');
+            
+            // Show loading state
+            loading.classList.add('active');
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/career-skills', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ career: career })
+                });
+
+                const data = await response.json();
+
+                loading.classList.remove('active');
+                submitBtn.disabled = false;
+
+                if (response.ok && data.success) {
+                    careerName.textContent = data.career;
+                    skillsContent.innerHTML = formatSkills(data.skills);
+                    results.classList.add('active');
+                } else {
+                    showError(data.error || 'An error occurred while fetching skills');
+                }
+            } catch (err) {
+                loading.classList.remove('active');
+                submitBtn.disabled = false;
+                showError('Network error: ' + err.message);
+            }
+        });
+
+        function showError(message) {
+            error.textContent = '❌ ' + message;
+            error.classList.add('active');
+        }
+
+        function formatSkills(skillsText) {
+            // Parse numbered list format and convert to HTML
+            const lines = skillsText.split('\n').filter(line => line.trim());
+            const listItems = [];
+            
+            lines.forEach(line => {
+                line = line.trim();
+                
+                // Match pattern: "1. **Skill Name**: Description"
+                // or "1. Skill Name: Description"
+                // Handle both with and without markdown bold
+                let match = line.match(/^(\d+)\.\s*\*\*(.+?)\*\*:\s*(.+)$/);
+                
+                if (match) {
+                    // Format with bold markdown: "1. **Skill**: Description"
+                    const number = match[1];
+                    const skillName = match[2].trim();
+                    const description = match[3].trim();
+                    
+                    listItems.push(`
+                        <li>
+                            <span class="skill-number">${number}</span>
+                            <span class="skill-title">${skillName}</span>
+                            <div class="skill-description">${description}</div>
+                        </li>
+                    `);
+                } else {
+                    // Try format without bold: "1. Skill Name: Description"
+                    match = line.match(/^(\d+)\.\s*(.+?):\s*(.+)$/);
+                    if (match) {
+                        const number = match[1];
+                        const skillName = match[2].trim();
+                        const description = match[3].trim();
+                        
+                        listItems.push(`
+                            <li>
+                                <span class="skill-number">${number}</span>
+                                <span class="skill-title">${skillName}</span>
+                                <div class="skill-description">${description}</div>
+                            </li>
+                        `);
+                    } else if (line.match(/^\d+\./)) {
+                        // Fallback for simpler format: "1. Text" (no colon)
+                        const matchSimple = line.match(/^(\d+)\.\s*(.+)$/);
+                        if (matchSimple) {
+                            const number = matchSimple[1];
+                            const content = matchSimple[2].trim();
+                            listItems.push(`
+                                <li>
+                                    <span class="skill-number">${number}</span>
+                                    <span class="skill-title">${content}</span>
+                                </li>
+                            `);
+                        }
+                    }
+                }
+            });
+            
+            if (listItems.length > 0) {
+                return `<ol class="skills-list">${listItems.join('')}</ol>`;
+            }
+            
+            // Fallback: if parsing fails, display as formatted text
+            return `<div style="white-space: pre-line; line-height: 1.8;">${escapeHtml(skillsText)}</div>`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
+
